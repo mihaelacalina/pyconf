@@ -38,7 +38,15 @@ class ConfigFileDeclaration:
 #endregion
 
 class Configuration:
+    """
+        Extend this class to create a configuration template and initialize it to load the file.
+        
+        The class docstring will be prepended to the configuration entries and
+        all properties may have a comment attached by setting the type to `Annotated[type, "comment"]`.
+    """
+
     _file_parts: list = []
+
     
     def __init__(self, file_path: str):
         from os.path import exists, isfile
@@ -291,12 +299,12 @@ class Configuration:
             try:
                 return int(raw_value)
             except Exception as exception:
-                raise SyntaxError(f"Invalid value for type int in property {name}") from exception
+                raise ValueError(f"Invalid value for type int in property {name}") from exception
         elif property_type is float:
             try:
                 return float(raw_value)
             except Exception as exception:
-                raise SyntaxError(f"Invalid value for type float in property {name}") from exception
+                raise ValueError(f"Invalid value for type float in property {name}") from exception
         elif property_type is bool:
             return raw_value.lower() == "true"
         elif property_type is str:
@@ -342,8 +350,37 @@ class Configuration:
         
         raise TypeError(f"Invalid type for property {name}")
 
+    def get(self, name: str):
+        """
+            Returns the value stored for the given property.
+
+            :raises KeyError: If the property is not defined in the template
+            :raises ConfigSyntaxError: If the configuration line has a syntax error
+            :raises ValueError: If the values in the configuration entry cannot be converted
+            to the assigned type
+            :raises TypeError: If the type defined in the template is not supported
+        """
+
+        return self._get_value(name)
+    
+    def set(self, name: str, value: SerializableField):
+        """
+            Sets the named property to the given value.
+
+            :raises KeyError: If the property is not defined in the template
+            :raises TypeError: If the type defined in the template is not the
+            same as the one provided or if it's not supported
+        """
+
+        return self._set_value(name, value)
 
     def save(self):
+        """
+            Saves the configuration to the file, including all changes made during runtime.
+
+            :raises IOError: If file writing cannot occur.
+        """
+
         with open(super().__getattribute__("_file_path"), "w") as handle:
             for index, part in enumerate(self._file_parts):
                 if index == len(self._file_parts) - 1:
