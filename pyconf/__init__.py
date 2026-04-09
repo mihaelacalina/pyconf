@@ -52,10 +52,12 @@ class Configuration:
         from os.path import exists, isfile
         from os import access, R_OK
 
+        super().__setattr__("_file_parts", [])
 
         option_types = self.__class__.__annotations__
         option_pairs = self.__class__.__dict__
         file_parts = self._file_parts
+
 
 
         super().__setattr__("_file_path", file_path)
